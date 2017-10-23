@@ -1,6 +1,6 @@
 ---
 title: "Mini-Project 2"
-author: "Your Name Here"
+author: "Shuli Hu, Karina Huang, Iris Dong"
 date: "October 31, 2017"
 output: html_document
 ---
