@@ -10,12 +10,28 @@ output: html_document
 
 This project is so interesting and relevant to my life!
 
-```{r, include=FALSE}
+```{r}
 library(tidyverse)
+library(dplyr)
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 
-##trial
+summary(committees)
 ```
+
+```{r}
+#select committees
+
+committees1 <- committees %>%
+  filter(cmte_party_affiliation != "UNK") %>%
+  select(cmte_dsgn, org_type, cmte_party_affiliation) 
+  
+committees1
+
+
+```
+
+
+
