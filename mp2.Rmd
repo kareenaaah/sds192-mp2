@@ -10,6 +10,12 @@ output: html_document
 
 This project is so interesting and relevant to my life!
 
+<<<<<<< HEAD
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
 ```{r, include=FALSE}
 <<<<<<< HEAD
 library(tidyverse)
@@ -47,6 +53,20 @@ cand_party <- candidates %>%
 
 =======
 
+<<<<<<< HEAD
+summary(committees)
+```
+
+```{r}
+#select committees
+
+committees1 <- committees %>%
+  filter(cmte_party_affiliation != "UNK") %>%
+  select(cmte_dsgn, org_type, cmte_party_affiliation) 
+  
+committees1
+```
+
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
@@ -67,8 +87,6 @@ Con <- contributions %>%
 Can <- candidates %>%
   filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
   select(cand_id:cand_office_state, cand_ici:cand_pcc) 
-  
-
 ```
 
 
@@ -122,6 +140,4 @@ Can <- candidates %>%
 
 
 
-
-
-
+>>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
