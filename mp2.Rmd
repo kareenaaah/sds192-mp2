@@ -11,13 +11,17 @@ output: html_document
 This project is so interesting and relevant to my life!
 
 ```{r, include=FALSE}
+<<<<<<< HEAD
 library(tidyverse)
 library(dplyr)
+=======
+>>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 ```
+<<<<<<< HEAD
 
 ```{r}
 glimpse(house_elections)
@@ -41,6 +45,74 @@ cand_party <- candidates %>%
 ```
 
 
+=======
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(dplyr)
+head(house_elections)
+```
+
+
+```{r}
+# Karina
+
+
+Cand.id <- c(candidates$cand_id)
+
+Con <- contributions %>%
+  filter(cand_id %in% Cand.id) %>%
+  select(cmte_id,transaction_pgi, entity_type:state, transaction_amt, cand_id) 
+
+Can <- candidates %>%
+  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
+  select(cand_id:cand_office_state, cand_ici:cand_pcc) 
+  
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
 
 
 
