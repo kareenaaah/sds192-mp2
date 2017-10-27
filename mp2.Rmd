@@ -12,10 +12,44 @@ This project is so interesting and relevant to my life!
 
 ```{r, include=FALSE}
 library(tidyverse)
+library(dplyr)
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
-
-##trial
 ```
+
+```{r}
+glimpse(house_elections)
+```
+```{r}
+glimpse(contributions)
+```
+```{r}
+glimpse(committees)
+```
+```{r}
+glimpse(candidates)
+```
+
+```{r}
+## Iris
+cand_party <- candidates %>%
+  summarise(total = n(),
+            R = sum(cand_party_affiliation == "REP"), D = sum(cand_party_affiliation == "DEM")) %>%
+  print()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
