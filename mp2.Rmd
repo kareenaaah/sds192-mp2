@@ -60,10 +60,14 @@ election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining ca
    mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, ## Sums of expediture by type
           con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA)
 
-election2 <- election %>%
-  gather("type", "amount",pro.CAN:con.NA)
-```
+pro <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
+con <- c("con.CAN","con.CCM","con.COM","con.IND","con.IND","con.PAC","con.PTY","con.NA")
 
+election2 <- election %>%
+  gather("type", "amount",pro.CAN:con.NA) %>%
+  select(cand_id, cand_party_affiliation, type, amount) %>%
+  mutate(entity.type = ifelse(type %in% c(pro), "pro", "con"))
+```
 
 con <- contributions %>%  ## New contribution dataset 
   filter(transaction_type == "24E" | transaction_type == "24A") %>% ## Filtering for transaction type: advocating and opposing election
@@ -84,7 +88,9 @@ con <- contributions %>%  ## New contribution dataset
             con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"])) %>%
   select(cand_id:con.PTY)
 
+
 cand.id <- c(con$cand_id) ## Vector for all ids in the new contribution dataset
+
 
 can <- candidates %>% ## New candidate dataset
   filter(cand_id %in% c(cand.id)) %>% ## Filtering out ids not reflected in the contribution dataset
@@ -104,7 +110,7 @@ election2 <- election %>%
 library(ggplot2)
 
 
-ggplot(election2, aes(x=cand_office, y=amount, col=type)) + 
+ggplot(election2, aes(x=cand_party_affiliation, y=amount, col=type)) + 
   geom_point() + 
   geom_jitter() +
   facet_wrap(~cand_party_affiliation)
