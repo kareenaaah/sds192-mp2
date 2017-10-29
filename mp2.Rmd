@@ -14,46 +14,13 @@ library(dplyr)
 ```
 
 ```{r, include=FALSE}
-<<<<<<< HEAD
-library(tidyverse)
-library(dplyr)
-=======
->>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
+
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 ```
-<<<<<<< HEAD
 
-```{r}
-glimpse(house_elections)
-```
-```{r}
-glimpse(contributions)
-```
-```{r}
-glimpse(committees)
-```
-```{r}
-glimpse(candidates)
-```
-
-```{r}
-## Iris
-cand_party <- candidates %>%
-  summarise(total = n(),
-            R = sum(cand_party_affiliation == "REP"), D = sum(cand_party_affiliation == "DEM")) %>%
-  print()
-```
-
-
-=======
-
-```{r, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(dplyr)
-```
 
 ```{r}
 ## Karina 10.29.17
@@ -79,7 +46,15 @@ con <- contributions %>%
             con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"]),
             con.NA = sum(transaction_amt[entity_type == "NA" & transaction_type == "24A"])) %>%
   select(cand_id:con.NA)
+```
 
+```{r}
+head(con)
+```
+
+
+```{r}
+## Karina
 cand.id <- c(con$cand_id)
 
 can <- candidates %>% ## New candidate dataset
@@ -89,16 +64,50 @@ can <- candidates %>% ## New candidate dataset
 election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining candidate and contribution dataset
    mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, ## Sums of expediture by type
           con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA)
+head(election)
+```
 
+
+```{R}
+## Karina
 pro <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
 con <- c("con.CAN","con.CCM","con.COM","con.IND","con.IND","con.PAC","con.PTY","con.NA")
+
+
 
 election2 <- election %>%
   gather("type", "amount",pro.CAN:con.NA) %>%
   select(cand_id, cand_party_affiliation, type, amount) %>%
-  mutate(entity.type = ifelse(type %in% c(pro), "pro", "con"))
+  mutate(transaction.type = ifelse(type %in% c(pro), "pro", "con"))
+
+## Iris
+election2$entity.type[election2$type %in% c("pro.CAN", "con.CAN")] <- "CAN"
+election2$entity.type[election2$type %in% c("pro.CCM", "con.CCM")] <- "CCM"
+election2$entity.type[election2$type %in% c("pro.COM", "con.COM")] <- "COM"
+election2$entity.type[election2$type %in% c("pro.IND", "con.IND")] <- "IND"
+election2$entity.type[election2$type %in% c("pro.ORG", "con.ORG")] <- "ORG"
+election2$entity.type[election2$type %in% c("pro.PAC", "con.PAC")] <- "PAC"
+election2$entity.type[election2$type %in% c("pro.PTY", "con.PTY")] <- "PTY"
+election2$entity.type[election2$type %in% c("pro.NA", "con.NA")] <- "NA"
+
+print(election2)
+
+
 ```
 
+
+## Iris Test
+
+library(ggplot2)
+
+
+ggplot(election2, aes(x= entity.type, y = sum(amount), fill=transaction.type)) + 
+  geom_bar() + 
+  facet_wrap(~cand_party_affiliation)
+
+
+
+### Karina 10.29.afternoon
 con <- contributions %>%  ## New contribution dataset 
   filter(transaction_type == "24E" | transaction_type == "24A") %>% ## Filtering for transaction type: advocating and opposing election
   group_by(cand_id) %>% 
@@ -132,23 +141,6 @@ election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining ca
 
 election2 <- election %>%
   gather("type", "amount",pro.CAN:con.PTY)
-
-
-```{r}
-## Karina Test
-
-library(ggplot2)
-
-
-ggplot(election2, aes(x=cand_party_affiliation, y=amount, col=type)) + 
-  geom_point() + 
-  geom_jitter() +
-  facet_wrap(~cand_party_affiliation)
-```
-
-
-
-
 
 
 
