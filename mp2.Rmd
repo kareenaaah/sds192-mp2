@@ -20,51 +20,61 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
-
-```{r}
-#select committees
-#Shuli Hu
-
-#select committees
-com1 <- committees %>%
-  filter(cmte_party_affiliation != "UNK") %>%
-  select(cmte_dsgn, org_type, cmte_party_affiliation) 
-
-glimpse(house_elections)
-#select house_elction 
-house1 <- house_elections %>%
-  select(candidate_name, state, party, primary_votes, runoff_votes, general_votes, ge_winner, incumbent)
-
-house1
-#try to join tables
-
-```
-
-
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
 ```
 
-
 ```{r}
-# Karina
+## Karina 10.29.17
 
+com <- committees %>%
+  select(cmte_id,org_type)
 
-Cand.id <- c(candidates$cand_id)
+com.id <- c(com$cmte_id)
 
-Con <- contributions %>% 
-  filter(cand_id %in% Cand.id) %>%
-  select(cmte_id,transaction_pgi, entity_type:state, transaction_amt, cand_id, tran_id) 
+con <- contributions %>%
+  filter(cmte_id %in% c(com.id))
 
-Can <- candidates %>%
-  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
-  select(cand_id:cand_office_state, cand_ici:cand_pcc) 
+con2 <- left_join(con, com, by = "cmte_id")
 
-Can
+con2 <- con2 %>%
+  filter(transaction_type == "24E" | transaction_type == "24A") %>%
+  mutate(entity_type = ifelse(entity_type == "", "NA", entity_type)) %>%
+  group_by(cand_id) %>% 
+  summarise(pro.CAN = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24E"]), ## Summarise independent expediture by entity (payee) types and transaction types 
+            pro.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24E"]),
+            pro.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24E"]),
+            pro.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24E"]),
+            pro.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24E"]),
+            pro.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24E"]),
+            pro.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24E"]),
+            pro.NA = sum(transaction_amt[entity_type == "NA" & transaction_type == "24E"]),
+            con.Can = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24A"]),
+            con.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24A"]),
+            con.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24A"]),
+            con.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24A"]),
+            con.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24A"]),
+            con.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24A"]),
+            con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"]),
+            con.NA = sum(transaction_amt[entity_type == "NA" & transaction_type == "24A"])) %>%
+  select(cand_id:con.NA)
+
+cand.id <- c(con$cand_id)
+
+can <- candidates %>% ## New candidate dataset
+  filter(cand_id %in% c(cand.id)) %>% ## Filtering out ids not reflected in the contribution dataset
+  select(cand_id:cand_office, cand_ici:cand_status) 
+
+election <- full_join(can, con2, by = "cand_id") %>% ## New dataset by joining candidate and contribution dataset
+   mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, ## Sums of expediture by type
+          con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA)
+
+election2 <- election %>%
+  gather("type", "amount",pro.CAN:con.NA)
 ```
 
-```{r}
+
 con <- contributions %>%  ## New contribution dataset 
   filter(transaction_type == "24E" | transaction_type == "24A") %>% ## Filtering for transaction type: advocating and opposing election
   group_by(cand_id) %>% 
@@ -96,8 +106,6 @@ election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining ca
 
 election2 <- election %>%
   gather("type", "amount",pro.CAN:con.PTY)
-```
-
 
 
 ```{r}
