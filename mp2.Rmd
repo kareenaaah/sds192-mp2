@@ -29,11 +29,18 @@ load("contributions.rda")
 #select committees
 #Shuli Hu
 
-committees1 <- committees %>%
+#select committees
+com1 <- committees %>%
   filter(cmte_party_affiliation != "UNK") %>%
   select(cmte_dsgn, org_type, cmte_party_affiliation) 
-  
-committees1
+
+glimpse(house_elections)
+#select house_elction 
+house1 <- house_elections %>%
+  select(candidate_name, state, party, primary_votes, runoff_votes, general_votes, ge_winner, incumbent)
+
+house1
+#try to join tables
 
 ```
 
@@ -47,16 +54,17 @@ head(house_elections)
 ```{r}
 # Karina
 
-
 Cand.id <- c(candidates$cand_id)
 
-Con <- contributions %>%
+Con <- contributions %>% 
   filter(cand_id %in% Cand.id) %>%
-  select(cmte_id,transaction_pgi, entity_type:state, transaction_amt, cand_id) 
+  select(cmte_id,transaction_pgi, entity_type:state, transaction_amt, cand_id, tran_id) 
 
 Can <- candidates %>%
   filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
   select(cand_id:cand_office_state, cand_ici:cand_pcc) 
+
+Can
 ```
 
 
