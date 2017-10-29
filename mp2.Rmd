@@ -28,17 +28,7 @@ library(dplyr)
 ```{r}
 ## Karina 10.29.17
 
-com <- committees %>%
-  select(cmte_id,org_type)
-
-com.id <- c(com$cmte_id)
-
 con <- contributions %>%
-  filter(cmte_id %in% c(com.id))
-
-con2 <- left_join(con, com, by = "cmte_id")
-
-con2 <- con2 %>%
   filter(transaction_type == "24E" | transaction_type == "24A") %>%
   mutate(entity_type = ifelse(entity_type == "", "NA", entity_type)) %>%
   group_by(cand_id) %>% 
@@ -66,7 +56,7 @@ can <- candidates %>% ## New candidate dataset
   filter(cand_id %in% c(cand.id)) %>% ## Filtering out ids not reflected in the contribution dataset
   select(cand_id:cand_office, cand_ici:cand_status) 
 
-election <- full_join(can, con2, by = "cand_id") %>% ## New dataset by joining candidate and contribution dataset
+election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining candidate and contribution dataset
    mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, ## Sums of expediture by type
           con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA)
 
