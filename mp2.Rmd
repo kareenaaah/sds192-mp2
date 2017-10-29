@@ -23,18 +23,18 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
-<<<<<<< HEAD
-summary(committees)
-```
+
 
 ```{r}
 #select committees
+#Shuli Hu
 
 committees1 <- committees %>%
   filter(cmte_party_affiliation != "UNK") %>%
   select(cmte_dsgn, org_type, cmte_party_affiliation) 
   
 committees1
+
 ```
 
 ```{r, message=FALSE, warning=FALSE}
