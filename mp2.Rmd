@@ -254,7 +254,8 @@ library(ggplot2)
 
 ggplot(election_total, aes(x = entity.type, y = amount/total*100, fill=transaction.type)) + 
   geom_bar(stat = "identity") + 
-  facet_wrap(~cand_party_affiliation)
+  facet_wrap(~cand_party_affiliation) 
+  
 ```
 
 
