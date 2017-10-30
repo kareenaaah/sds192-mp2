@@ -29,17 +29,16 @@ load("contributions.rda")
 contributions1 <- contributions %>%
   filter(transaction_type == "24E" | transaction_type == "24A") %>%
   mutate(entity_type = ifelse(entity_type == "", "NA", entity_type)) %>%
+  filter(entity_type != "NA") %>%
   group_by(cand_id) 
 
+contributions1
 trans_type_list = c("pro", "con")
 
-entity_type_list = c("CAN", "CCM", "COM", "IND", "ORG", "PAC", "PTY", "NA")
-
-
-
-#trans_entity_list
+entity_type_list = c("CAN", "CCM", "COM", "IND", "ORG", "PAC", "PTY")
 
 # trans_entity_list = c("pro.CAN", "pro.CCM", "pro.COM", "pro.IND", "pro.ORG", "pro.PAC", "pro.PTY", "pro-NA",  "con.CAN", "con.CCM", "con.COM", "con.IND", "con.ORG", "con.PAC", "con.PTY", "con.NA")
+
 
 #function of sum of amount categorized by (24A/24E + entity type)
 amount_sum <- function(entity_type_arg, trans_type_arg) {
@@ -47,21 +46,23 @@ amount_sum <- function(entity_type_arg, trans_type_arg) {
     summarise(te = sum(transaction_amt[transaction_type == trans_type_arg & entity_type == entity_type_arg]))
 }
 
- amount_sum(entity_type_arg = "IND", trans_type_arg = "24E")
+# paste("pro", "CAN", sep = ".")
+# 
+# #for loop
+# 
+# #create a list
+# trans_entity_list <- list()
+# i <- 1
+# for (trans_tp in trans_entity_list) {
+#   for (entity_tp in entity_type_list) {
+#     trans_entity = paste(trans_tp, entity_tp, sep=".")
+#     trans_entity_list[i] <- trans_entity
+#     i<-i+1
+#   }
+# }
+# trans_entity_list
 
-
-
-```
-#for loop
-
-for (trans_tp in trans_entity_list) {
-  for (entity_tp in entity_type_list) {
-    trans_entity = paste(trans_tp, entity_tp, sep=".")
-    mutate(contributions1, trans_entity="")
-  }
-}
- 
-glimpse(contributions1)
+#glimpse(contributions1)
 # for (trans_t in trans_type_list){
 #   for (entity_t in entity_type_list){
 #        
@@ -70,6 +71,9 @@ glimpse(contributions1)
 #          summarise(trans_entity_list1[i] <- amount_sum(entity_t, trans_t))
 #   }
 #  }
+
+```
+
 
 
 
