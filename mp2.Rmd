@@ -61,23 +61,73 @@ can <- candidates %>% ## New candidate dataset
   filter(cand_id %in% c(cand.id)) %>% ## Filtering out ids not reflected in the contribution dataset
   select(cand_id:cand_office, cand_ici:cand_status) 
 
+pro.type <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
+con.type <- c("con.CAN","con.CCM","con.COM","con.IND","con.ORG","con.PAC","con.PTY","con.NA")
+
+election <- full_join(can, con, by = "cand_id") %>% 
+  mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, 
+          con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA) %>%
+  group_by(cand_party_affiliation) %>%
+  summarise(pro.CAN = sum(pro.CAN), pro.CCM = sum(pro.CCM), pro.COM = sum(pro.COM),
+            pro.IND = sum(pro.IND), pro.ORG = sum(pro.ORG), pro.PAC = sum(pro.PAC),
+            pro.PTY = sum(pro.PTY), pro.NA = sum(pro.NA), 
+            con.CAN = sum(con.Can), con.CCM = sum(con.CCM), con.COM = sum(con.COM),
+            con.IND = sum(con.IND), con.ORG = sum(con.ORG), con.PAC = sum(con.PAC),
+            con.PTY = sum(con.PTY), con.NA = sum(con.NA), pro.sum = sum(pro.sum), con.sum = sum(con.sum)) %>%
+  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
+  gather("type", "amount",pro.CAN:con.NA) %>%
+  mutate(transaction.type = ifelse(type %in% c(pro.type), "pro", "con"),
+         entity.type = ifelse(type %in% "pro.CAN" | type %in% "con.CAN", "CAN", 
+                              ifelse(type %in% "pro.CCM" | type %in% "con.CCM", "CCM", 
+                                     ifelse(type %in% "pro.COM" | type %in% "con.COM", "COM", 
+                                            ifelse(type %in% "pro.IND" | type %in% "con.IND", "IND", 
+                                                   ifelse(type %in% "pro.ORG" | type %in% "con.ORG", "ORG", 
+                                                          ifelse(type %in% "pro.PAC" | type %in% "con.PAC", "PAC",
+                                                                 ifelse(type %in% "pro.PTY" | type %in% "con.PTY", "PTY",
+                                                                        ifelse(type %in% "pro.NA" | type %in% "con.NA", "NA", type))))))))) %>%
+  select(-type) %>%
+  spread(transaction.type, amount) %>%
+  select(-pro.sum, -con.sum) %>%
+  gather("transaction.type", "amount", con:pro)
+
+
+
+```
+
+pro.type <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
+con.type <- c("con.CAN","con.CCM","con.COM","con.IND","con.ORG","con.PAC","con.PTY","con.NA")
+
 election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining candidate and contribution dataset
    mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY+pro.NA, ## Sums of expediture by type
           con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY+con.NA)
 head(election)
-```
 
 
-```{R}
+
+
 ## Karina
 pro <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
 con <- c("con.CAN","con.CCM","con.COM","con.IND","con.IND","con.PAC","con.PTY","con.NA")
+>>>>>>> f3d9f9395c8f7674cb85dedcd22d3f88b92f3015
 
 
 
 election2 <- election %>%
   gather("type", "amount",pro.CAN:con.NA) %>%
   select(cand_id, cand_party_affiliation, type, amount) %>%
+  mutate(transaction.type = ifelse(type %in% c(pro.type), "pro", "con"),
+         entity.type = ifelse(type %in% "pro.CAN" | type %in% "con.CAN", "CAN", 
+                              ifelse(type %in% "pro.CCM" | type %in% "con.CCM", "CCM", 
+                                     ifelse(type %in% "pro.COM" | type %in% "con.COM", "COM", 
+                                            ifelse(type %in% "pro.IND" | type %in% "con.IND", "IND", 
+                                                   ifelse(type %in% "pro.ORG" | type %in% "con.ORG", "ORG", 
+                                                          ifelse(type %in% "pro.PAC" | type %in% "con.PAC", "PAC",
+                                                                 ifelse(type %in% "pro.PTY" | type %in% "con.PTY", "PTY",
+                                                                        ifelse(type %in% "pro.NA" | type %in% "con.NA", "NA", type)))))))))
+
+election3 <- election2 %>%
+  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP")
+
   mutate(transaction.type = ifelse(type %in% c(pro), "pro", "con"))
 
 ## Iris
@@ -93,7 +143,6 @@ election2$entity.type[election2$type %in% c("pro.NA", "con.NA")] <- "NA"
 print(election2)
 
 
-```
 
 ```{r}
 election2 %>%
@@ -151,6 +200,15 @@ election <- full_join(can, con, by = "cand_id") %>% ## New dataset by joining ca
 election2 <- election %>%
   gather("type", "amount",pro.CAN:con.PTY)
 
+```{r}
+## Karina Test 10.29.17
+
+library(ggplot2)
+
+ggplot(election, aes(x=entity.type, y=amount, fill=transaction.type)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_wrap(~cand_party_affiliation)
+```
 
 
 
@@ -174,27 +232,3 @@ election2 <- election %>%
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
-
-
-
-
-
-
-
-
-
->>>>>>> 521d75e56e541d7eb04b56e48f2bfda83bd74260
