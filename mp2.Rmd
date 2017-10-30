@@ -95,17 +95,26 @@ print(election2)
 
 ```
 
+```{r}
+election2 %>%
+  filter(cand_party_affiliation == "DEM") %>%
+  group_by(entity.type) %>%
+  summarise(total = sum(amount)) %>%
+  print()
+```
 
+
+```{r}
 ## Iris Test
 
 library(ggplot2)
 
 
-ggplot(election2, aes(x= entity.type, y = sum(amount), fill=transaction.type)) + 
-  geom_bar() + 
+ggplot(election2, aes(x= entity.type, y = amount, na.rm = TRUE)) + 
+  geom_point() + 
   facet_wrap(~cand_party_affiliation)
 
-
+```
 
 ### Karina 10.29.afternoon
 con <- contributions %>%  ## New contribution dataset 
