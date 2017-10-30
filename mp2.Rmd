@@ -88,11 +88,26 @@ election <- full_join(can, con, by = "cand_id") %>%
   select(-type) %>%
   spread(transaction.type, amount) %>%
   select(-pro.sum, -con.sum) %>%
-  gather("transaction.type", "amount", con:pro)
-
-
-
+  gather("transaction.type", "amount", con:pro) %>%
+  print()
 ```
+
+```{r}
+## Iris 10/29/2017
+election2 <- election %>%
+  group_by(cand_party_affiliation, entity.type) %>%
+  summarise(total = sum(amount)) %>%
+  print()
+```
+
+
+```{r}
+## Iris 10/29/17
+election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
+print(election_total)
+```
+
+
 
 pro.type <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
 con.type <- c("con.CAN","con.CCM","con.COM","con.IND","con.ORG","con.PAC","con.PTY","con.NA")
@@ -144,26 +159,6 @@ print(election2)
 
 
 
-```{r}
-election2 %>%
-  filter(cand_party_affiliation == "DEM") %>%
-  group_by(entity.type) %>%
-  summarise(total = sum(amount)) %>%
-  print()
-```
-
-
-```{r}
-## Iris Test
-
-library(ggplot2)
-
-
-ggplot(election2, aes(x= entity.type, y = amount, na.rm = TRUE)) + 
-  geom_point() + 
-  facet_wrap(~cand_party_affiliation)
-
-```
 
 ### Karina 10.29.afternoon
 con <- contributions %>%  ## New contribution dataset 
@@ -201,12 +196,12 @@ election2 <- election %>%
   gather("type", "amount",pro.CAN:con.PTY)
 
 ```{r}
-## Karina Test 10.29.17
+## Iris Test 10.29.17
 
 library(ggplot2)
 
-ggplot(election, aes(x=entity.type, y=amount, fill=transaction.type)) + 
-  geom_bar(stat = "identity", position = "dodge") + 
+ggplot(election_total, aes(x = entity.type, y = amount/total*100, fill=transaction.type)) + 
+  geom_bar(stat = "identity") + 
   facet_wrap(~cand_party_affiliation)
 ```
 
