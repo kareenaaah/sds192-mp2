@@ -9,9 +9,8 @@ output: html_document
 
 a short paragraph introducing what we are looking at
 
-
 ```{r, warning=FALSE, message=FALSE}
-#load packages and dataset
+#load packages 
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -21,121 +20,35 @@ library(gridExtra)
 ```
 
 ```{r}
+#load dataset
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 ```
 
-```{r, warning=FALSE, message=FALSE}
-#Shuli rewrite chunk "Karina 10/29/17 #1 #2"
-
-#create two lists of transaction type and entity type
-trans_type_list = c("pro", "con")
-entity_type_list = c("CAN", "CCM", "COM", "IND", "ORG", "PAC", "PTY")
-
-#wrangling data in contributions
+```{r}
+#REWRITE-10.31.17
 contributions1 <- contributions %>%
   filter(transaction_type == "24E" | transaction_type == "24A") %>%
   filter(entity_type != "") %>%
-  group_by(cand_id) %>%
-  summarise(pro.CAN = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24E"]),
-            pro.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24E"]),
-            pro.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24E"]),
-            pro.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24E"]),
-            pro.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24E"]),
-            pro.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24E"]),
-            pro.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24E"]),
-            con.Can = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24A"]),
-            con.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24A"]),
-            con.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24A"]),
-            con.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24A"]),
-            con.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24A"]),
-            con.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24A"]),
-            con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"]))
-
+  select(cand_id, transaction_type, transaction_amt, entity_type, cmte_id)
+  
 candidates1 <- candidates %>% ## New candidate dataset
   filter(cand_id %in% c(contributions1$cand_id)) %>% ## get the cand_id exists in both candidates and contributions1 
-  select(cand_id:cand_office, cand_ici:cand_status) 
-
- 
-#create two lists of pro.type and con.type
-pro.type <- c()
-con.type <- c()
-i=1
-while(i<=length(entity_type_list)) {
-       a <- paste("pro", entity_type_list[i], sep=".")
-       b <- paste("con", entity_type_list[i], sep=".")
-       pro.type <- c(pro.type, a)
-       con.type <- c(con.type, b)
-       i=i+1
- }
+  select(cand_id, cand_party_affiliation:cand_office, cand_ici:cand_status) 
 
 #join tables candidates and contributions by candidate ID
-election <- full_join(candidates1, contributions1, by = "cand_id") %>% 
-  mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY, 
-          con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY) %>%
-  group_by(cand_party_affiliation) %>%
-  summarise(pro.CAN = sum(pro.CAN), pro.CCM = sum(pro.CCM), pro.COM = sum(pro.COM), 
-            pro.IND = sum(pro.IND), pro.ORG = sum(pro.ORG), pro.PAC = sum(pro.PAC),
-            pro.PTY = sum(pro.PTY), 
-            con.CAN = sum(con.Can), con.CCM = sum(con.CCM), con.COM = sum(con.COM),
-            con.IND = sum(con.IND), con.ORG = sum(con.ORG), con.PAC = sum(con.PAC),
-            con.PTY = sum(con.PTY), pro.sum = sum(pro.sum), con.sum = sum(con.sum)) %>%
+election <- full_join(candidates1, contributions1, by = "cand_id") %>%
+  group_by(cand_party_affiliation, entity_type, transaction_type) %>%
+  summarise(amount = sum(transaction_amt)) %>%
+  mutate(type = ifelse(transaction_type == "24A", "pro", "con")) %>%
   filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
-  gather("type", "amount",pro.CAN:con.PTY) %>%
-  mutate(transaction.type = ifelse(type %in% c(pro.type), "pro", "con"),
-         entity.type = ifelse(type %in% "pro.CAN" | type %in% "con.CAN", "CAN", 
-                              ifelse(type %in% "pro.CCM" | type %in% "con.CCM", "CCM", 
-                                     ifelse(type %in% "pro.COM" | type %in% "con.COM", "COM", 
-                                            ifelse(type %in% "pro.IND" | type %in% "con.IND", "IND", 
-                                                   ifelse(type %in% "pro.ORG" | type %in% "con.ORG", "ORG", 
-                                                          ifelse(type %in% "pro.PAC" | type %in% "con.PAC", "PAC",
-                                                                 ifelse(type %in% "pro.PTY" | type %in% "con.PTY", "PTY", type)))))))) %>%
-  select(-type) %>%
-  spread(transaction.type, amount) %>%
-  select(-pro.sum, -con.sum) %>%
-  gather("transaction.type", "amount", con:pro)
-```
-
-###describe the table
-
-
-
-```{r, warning=FALSE, message=FALSE}
-#Shuli rewrite 10/31/2017 morning
-
-#join tables election
-election2 <- election %>%
-  group_by(cand_party_affiliation, entity.type) %>%
-  summarise(party_entity_total = sum(amount)) #for each party*entity the total amount of transactions
-
-election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
-
-#for only entity type "ORG""
-election_org_only <- election2 %>%
-  filter(entity.type == "ORG")
-
-election_non_org <- election2 %>%
-  filter(!entity.type == "ORG")
-
-print(election_org_only)
-party_name <- c(DEM="Democratic",
-                REP="Republican")
+  select(-transaction_type) %>%
+  na.omit()
 ```
 
 
-```{r}
-print(election2)
-summary(election_org_only)
-```
-
-
-###describe the plot
-
-The percentage distribution of contributions
-
-```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=8, echo=FALSE}
 #plot
 #percentage distribution of contributions
 ggplot(election_total, aes(x = entity.type, y = amount/party_entity_total*100, fill=transaction.type, width = 0.7)) + 
@@ -160,11 +73,9 @@ ggplot(election_total, aes(x = entity.type, y = amount/party_entity_total*100, f
   scale_fill_discrete(name="Transaction Type",
                          breaks=c("con", "pro"),
                          labels=c("Opposing election of candidate", "Advocating election of candidate"))
-```
 
 ###describe the plot
 
-```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=8, echo=FALSE}
 #amount distribution of contributions
 p2 <- ggplot(election_non_org, aes(x = entity.type, y = party_entity_total/1000000)) + 
   geom_bar(stat = "identity", 
@@ -228,14 +139,14 @@ p3 <- ggplot(election_org_only, aes(x = entity.type, y = party_entity_total/1000
  
 
 grid.arrange(p2,p3)
-```
+
+
 
 
 
 
 
 ==========================scratch paper
-```{r, warning=FALSE, message=FALSE}
 ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fill=transaction.type)) + 
   geom_bar(stat = "identity",alpha=0.8) + 
   facet_wrap(~cand_party_affiliation) +
@@ -248,7 +159,6 @@ ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fill=tran
         panel.grid.major=element_blank(), 
         panel.grid.minor=element_blank(), 
         panel.background=element_blank()) 
-```
 
 
 
@@ -266,7 +176,8 @@ ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fill=tran
 
 
 
-```{r}
+
+
 ## Karina 10.29.17 #1
 
 con <- contributions %>%
@@ -289,7 +200,7 @@ con <- contributions %>%
   select(cand_id:con.PTY)
 
 con
-```
+
 
 amount_sum <- function(entity_type_arg, trans_type_arg) {
   contributions %>%
@@ -299,7 +210,7 @@ amount_sum <- function(entity_type_arg, trans_type_arg) {
 
 
 
-```{r}
+
 ## Karina 10/29/17 #2
 cand.id <- c(con$cand_id)
 
@@ -335,36 +246,34 @@ election <- full_join(can, con, by = "cand_id") %>%
   select(-pro.sum, -con.sum) %>%
   gather("transaction.type", "amount", con:pro) %>%
   print()
-```
 
-```{r}
 ## Iris 10/29/2017
 election2 <- election %>%
   group_by(cand_party_affiliation, entity.type) %>%
   summarise(total = sum(amount)) %>%
   print()
-```
 
 
-```{r}
+
+
 ## Iris 10/29/17
 election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
 print(election_total)
-```
 
-```{r}
+
+
 ##Iris 10/30/17
 election_org_only <- election_total %>%
   filter(entity.type == "ORG")
 print(election_org_only)
-```
 
-```{r}
+
+
 ##Iris 10/30/17
 election_non_org <- election_total %>%
   filter(!entity.type == "ORG")
 print(election_non_org)
-```
+
 
 
 pro.type <- c("pro.CAN","pro.CCM","pro.COM","pro.IND","pro.ORG","pro.PAC","pro.PTY","pro.NA")
@@ -454,7 +363,7 @@ election2 <- election %>%
   gather("type", "amount",pro.CAN:con.PTY)
   
   
-```{r}
+
 ## Iris Test 10.30.17
 ggplot(election_non_org, aes(x = entity.type, y = total, fill=transaction.type)) + 
   geom_bar(stat = "identity") + 
@@ -463,18 +372,17 @@ ggplot(election_non_org, aes(x = entity.type, y = total, fill=transaction.type))
 ggplot(election_org_only, aes(x = entity.type, y = total, fill=transaction.type)) + 
   geom_bar(stat = "identity") + 
   facet_wrap(~cand_party_affiliation)
-```
+
   
   
   
 
-```{r}
+
 ## Iris Test 10.29.17
 ggplot(election_total, aes(x = entity.type, y = amount/total*100, fill=transaction.type)) + 
   geom_bar(stat = "identity") + 
   facet_wrap(~cand_party_affiliation) 
   
-```
 
 
 
@@ -504,6 +412,9 @@ ggplot(election_total, aes(x = entity.type, y = amount/total*100, fill=transacti
 
 
 
+
+=======
+>>>>>>> b3dbcf82666d3835bcc337539e205e4944e361c6
 
 
 
