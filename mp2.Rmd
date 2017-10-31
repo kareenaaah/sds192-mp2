@@ -28,22 +28,23 @@ load("contributions.rda")
 ```
 
 ```{r}
-#REWRITE-10.31.17
+#Building new contribution dataset
 contributions1 <- contributions %>%
-  filter(transaction_type == "24E" | transaction_type == "24A") %>%
-  filter(entity_type != "") %>%
+  filter(transaction_type == "24E" | transaction_type == "24A") %>% #filtering for transaction types: independent expenditure advocating and opposing individual elections 
+  filter(entity_type != "") %>% 
   select(cand_id, transaction_type, transaction_amt, entity_type, cmte_id)
-  
-candidates1 <- candidates %>% ## New candidate dataset
-  filter(cand_id %in% c(contributions1$cand_id)) %>% ## get the cand_id exists in both candidates and contributions1 
+
+#Building new candidate dataset  
+candidates1 <- candidates %>%
+  filter(cand_id %in% c(contributions1$cand_id)) %>% #saving only canditate ids that exists in contribution dataset 
   select(cand_id, cand_party_affiliation:cand_office, cand_ici:cand_status) 
 
-#join tables candidates and contributions by candidate ID
+#Building new election dataset for use by joining new contribution and candidate dataset
 election <- full_join(candidates1, contributions1, by = "cand_id") %>%
   group_by(cand_party_affiliation, entity_type, transaction_type) %>%
-  summarise(amount = sum(transaction_amt)) %>%
-  mutate(type = ifelse(transaction_type == "24A", "pro", "con")) %>%
-  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
+  summarise(amount = sum(transaction_amt)) %>% #summarize transaction amount by political parties, entity types and transaction types
+  mutate(type = ifelse(transaction_type == "24A", "con", "pro")) %>% #new variable to identify transaction types by pro and con
+  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>% #saving only democrats and republicans
   select(-transaction_type) %>%
   na.omit()
 ```
