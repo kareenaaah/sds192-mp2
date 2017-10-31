@@ -1,29 +1,30 @@
 ---
-title: "Mini-Project 2"
+title: "Mini-Project 2: Federal Election 2012"
 author: "Shuli Hu, Karina Huang, Iris Dong"
 date: "October 31, 2017"
 output: html_document
 ---
 
+###Issue
 
-## Loading the data
+a short paragraph introducing what we are looking at
 
-```{r}
-#load packages
+
+```{r, warning=FALSE, message=FALSE}
+#load packages and dataset
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
-
-#load data set
 load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Shuli rewrite chunk "Karina 10/29/17 #1 #2"
 
+#create two lists of transaction type and entity type
 trans_type_list = c("pro", "con")
 entity_type_list = c("CAN", "CCM", "COM", "IND", "ORG", "PAC", "PTY")
 
@@ -51,18 +52,20 @@ candidates1 <- candidates %>% ## New candidate dataset
   filter(cand_id %in% c(contributions1$cand_id)) %>% ## get the cand_id exists in both candidates and contributions1 
   select(cand_id:cand_office, cand_ici:cand_status) 
 
+ 
 #create two lists of pro.type and con.type
 pro.type <- c()
 con.type <- c()
 i=1
-while(i<8) {
-      a <- paste("pro", entity_type_list[i], sep=".")
-      b <- paste("con", entity_type_list[i], sep=".")
-      pro.type <- c(pro.type, a)
-      con.type <- c(con.type, b)
-      i=i+1
-}
+while(i<=length(entity_type_list)) {
+       a <- paste("pro", entity_type_list[i], sep=".")
+       b <- paste("con", entity_type_list[i], sep=".")
+       pro.type <- c(pro.type, a)
+       con.type <- c(con.type, b)
+       i=i+1
+ }
 
+#join tables candidates and contributions by candidate ID
 election <- full_join(candidates1, contributions1, by = "cand_id") %>% 
   mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY, 
           con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY) %>%
@@ -90,8 +93,103 @@ election <- full_join(candidates1, contributions1, by = "cand_id") %>%
   print()
 ```
 
+###describe the table
 
 
+```{r, warning=FALSE, message=FALSE}
+#Shuli rewrite 10/31/2017 morning
+
+#join tables election
+election2 <- election %>%
+  group_by(cand_party_affiliation, entity.type) %>%
+  summarise(party_entity_total = sum(amount)) #for each party*entity the total amount of transactions
+
+election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
+print(election_total)
+
+#for only entity type "ORG""
+election_org_only <- election_total %>%
+  filter(entity.type == "ORG")
+
+election_non_org <- election_total %>%
+  filter(!entity.type == "ORG")
+```
+
+
+###describe the plot
+
+The percentage distribution of contributions
+
+```{r, warning=FALSE, message=FALSE}
+#plot
+#percentage distribution of contributions
+ggplot(election_total, aes(x = entity.type, y = amount/party_entity_total*100, fill=transaction.type)) + 
+  geom_bar(stat = "identity") + 
+  facet_wrap(~cand_party_affiliation) +
+  labs(title = "Distribution of Contributions by Party and Entity Type",x="Entity Type", y="Percentage of Contributions") +
+  theme(plot.title=element_text(size=rel(1), 
+                                face="bold", 
+                                family="Helvetica", 
+                                hjust=0.5), 
+        panel.border=element_blank(), 
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(), 
+        panel.background=element_blank()) 
+```
+
+###describe the plot
+
+```{r, warning=FALSE, message=FALSE}
+#amount distribution of contributions
+
+ggplot(election_non_org, aes(x = entity.type, y = party_entity_total, fill=transaction.type)) + 
+  geom_bar(stat = "identity") + 
+  facet_wrap(~cand_party_affiliation) +
+  labs(title = "Distribution of Contributions by Party and Entity Type (Non-ORG)",x="Entity Type", y="Amount of Contributions") +
+  theme(plot.title=element_text(size=rel(1), 
+                                face="bold", 
+                                family="Helvetica", 
+                                hjust=0.5), 
+        panel.border=element_blank(), 
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(), 
+        panel.background=element_blank()) 
+```
+
+###describe the plot
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fill=transaction.type)) + 
+  geom_bar(stat = "identity") + 
+  facet_wrap(~cand_party_affiliation) +
+  labs(title = "Distribution of Contributions by Party and Entity Type (ORG)",x="ORG", y="Amount of Contributions") +
+  theme(plot.title=element_text(size=rel(1), 
+                                face="bold", 
+                                family="Helvetica", 
+                                hjust=0.5), 
+        panel.border=element_blank(), 
+        panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(), 
+        panel.background=element_blank()) 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==========================scratch paper
 ```{r}
 ## Karina 10.29.17 #1
 
@@ -116,8 +214,7 @@ con <- contributions %>%
 
 con
 ```
-#Shuli, this function makes R run very slow
-#function of sum of amount categorized by (24A/24E + entity type)
+
 amount_sum <- function(entity_type_arg, trans_type_arg) {
   contributions %>%
     summarise(te = sum(transaction_amt[entity_type == entity_type_arg & transaction_type == trans_type_arg]))
@@ -178,6 +275,7 @@ election2 <- election %>%
 election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
 print(election_total)
 ```
+
 ```{r}
 ##Iris 10/30/17
 election_org_only <- election_total %>%
@@ -296,8 +394,6 @@ ggplot(election_org_only, aes(x = entity.type, y = total, fill=transaction.type)
 
 ```{r}
 ## Iris Test 10.29.17
-
-
 ggplot(election_total, aes(x = entity.type, y = amount/total*100, fill=transaction.type)) + 
   geom_bar(stat = "identity") + 
   facet_wrap(~cand_party_affiliation)
