@@ -96,10 +96,10 @@ election <- full_join(candidates1, contributions1, by = "cand_id") %>%
   spread(transaction.type, amount) %>%
   select(-pro.sum, -con.sum) %>%
   gather("transaction.type", "amount", con:pro)
-  print(election)
 ```
 
 ###describe the table
+
 
 
 ```{r, warning=FALSE, message=FALSE}
@@ -113,17 +113,21 @@ election2 <- election %>%
 election_total <- left_join(election, election2, by = c("cand_party_affiliation", "entity.type"))
 
 #for only entity type "ORG""
-election_org_only <- election_total %>%
+election_org_only <- election2 %>%
   filter(entity.type == "ORG")
 
-election_non_org <- election_total %>%
+election_non_org <- election2 %>%
   filter(!entity.type == "ORG")
 
 print(election_org_only)
 party_name <- c(DEM="Democratic",
                 REP="Republican")
-Transaction_type <- c(pro="Advocating election of candidate",
-                      con="opposing election of candidate")
+```
+
+
+```{r}
+print(election2)
+summary(election_org_only)
 ```
 
 
@@ -137,7 +141,7 @@ The percentage distribution of contributions
 ggplot(election_total, aes(x = entity.type, y = amount/party_entity_total*100, fill=transaction.type, width = 0.7)) + 
   geom_bar(stat = "identity", alpha=0.8) + 
   facet_grid(cand_party_affiliation~.,labeller=as_labeller(party_name)) +
-  labs(title = "Distribution of Contributions \nby Party and Entity Type",x="Entity Type", y="Contributions (%)", fill = "Transaction Type") +
+  labs(title = "Distribution of Contributions \nby Party and Entity Type",x="Entity Type", y="Contributions (%)") +
   theme(plot.title=element_text(size = 18, 
                                 face="bold", 
                                 family="Helvetica", 
@@ -152,17 +156,29 @@ ggplot(election_total, aes(x = entity.type, y = amount/party_entity_total*100, f
         legend.text = element_text(size=10),
         panel.border=element_blank(), 
         panel.grid=element_blank(),
-        panel.margin=unit(2,"lines"))
+        panel.margin=unit(2,"lines"))+
+  scale_fill_discrete(name="Transaction Type",
+                         breaks=c("con", "pro"),
+                         labels=c("Opposing election of candidate", "Advocating election of candidate"))
 ```
 
 ###describe the plot
 
 ```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=8, echo=FALSE}
 #amount distribution of contributions
-p2 <- ggplot(election_non_org, aes(x = entity.type, y = party_entity_total, fill=transaction.type)) + 
-  geom_bar(stat = "identity", alpha = 0.8) + 
-  facet_grid(.~cand_party_affiliation,labeller=as_labeller(party_name)) +
-  labs(title = "Distribution of Contributions by Party and Entity Type (Non-ORG)",x="Entity Type", y="Amount of Contributions \n(in USD)", fill="Transaction Type") +
+p2 <- ggplot(election_non_org, aes(x = entity.type, y = party_entity_total/1000000)) + 
+  geom_bar(stat = "identity", 
+           alpha = 0.8, fill="blue") + 
+  facet_grid(.~cand_party_affiliation,
+             labeller=as_labeller(party_name)) +
+  labs(title = "Contributions by Party and Entity Type (Non-ORG)",x="Entity Type", y="Amount of Contributions \n(in 'mil USD)", fill="Transaction Type") +
+  geom_text(aes(label=round(party_entity_total/1000000, digits=3)), vjust=-0.3, color="black", size=3.5)+
+   scale_y_continuous(limits = c(0, 15),
+                      breaks = c(0, 5, 12), 
+                     labels = c("0", "5", "12"))+
+  scale_fill_discrete(name="Transaction Type",
+                         breaks=c("con", "pro"),
+                         labels=c("Opposing election of candidate", "Advocating election of candidate"))+
   theme(plot.title=element_text(size= 18, 
                                 face="bold", 
                                 family="Helvetica", 
@@ -177,13 +193,23 @@ p2 <- ggplot(election_non_org, aes(x = entity.type, y = party_entity_total, fill
         legend.text = element_text(size=10),
         panel.border=element_blank(), 
         panel.grid.major=element_blank(), 
-        panel.grid.minor=element_blank(), 
-        panel.margin=unit(2,"lines")) 
+        panel.grid.minor=element_blank())
+  
 
-p3 <- ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fill=transaction.type, width=0.15)) + 
-  geom_bar(stat = "identity",alpha=0.8) + 
-  facet_grid(.~cand_party_affiliation,labeller=as_labeller(party_name)) +
-  labs(title = "Distribution of Contributions by Party and Entity Type (ORG)",x="Entity Type", y="Amount of Contributions \n(in USD)", fill="Transaction Type") +
+p3 <- ggplot(election_org_only, aes(x = entity.type, y = party_entity_total/1000000, width=0.15)) + 
+  geom_bar(stat = "identity",
+           alpha=0.8, 
+           fill="blue") + 
+  facet_grid(.~cand_party_affiliation,
+             labeller=as_labeller(party_name)) +
+  labs(title = "Contributions by Party and Entity Type (ORG)",x="Entity Type", y="Amount of Contributions \n(in ‘mil USD)", fill="Transaction Type") +
+  geom_text(aes(label=round(party_entity_total/1000000, digits=3)), vjust=-0.3, color="black", size=3.5)+
+   scale_y_continuous(limits = c(0,700),
+                      breaks = c(0, 300, 600), 
+                     labels = c("0", "300", "600"))+
+  scale_fill_discrete(name="Transaction Type",
+                         breaks=c("con", "pro"),
+                         labels=c("Opposing election of candidate", "Advocating election of candidate"))+
   theme(plot.title=element_text(size=18, 
                                 face="bold", 
                                 family="Helvetica", 
@@ -198,7 +224,8 @@ p3 <- ggplot(election_org_only, aes(x = entity.type, y = party_entity_total, fil
         legend.text = element_text(size=10),
         panel.border=element_blank(), 
         panel.grid.major=element_blank(), 
-        panel.grid.minor=element_blank()) 
+        panel.grid.minor=element_blank())
+ 
 
 grid.arrange(p2,p3)
 ```
