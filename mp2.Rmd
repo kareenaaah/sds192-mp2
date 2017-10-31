@@ -21,23 +21,76 @@ load("committees.rda")
 load("contributions.rda")
 ```
 
-
 ```{r}
-#Shuli test
-#function
+#Shuli rewrite chunk "Karina 10/29/17 #1 #2"
+
 trans_type_list = c("pro", "con")
 entity_type_list = c("CAN", "CCM", "COM", "IND", "ORG", "PAC", "PTY")
 
+#wrangling data in contributions
+contributions1 <- contributions %>%
+  filter(transaction_type == "24E" | transaction_type == "24A") %>%
+  filter(entity_type != "") %>%
+  group_by(cand_id) %>%
+  summarise(pro.CAN = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24E"]),
+            pro.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24E"]),
+            pro.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24E"]),
+            pro.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24E"]),
+            pro.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24E"]),
+            pro.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24E"]),
+            pro.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24E"]),
+            con.Can = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24A"]),
+            con.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24A"]),
+            con.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24A"]),
+            con.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24A"]),
+            con.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24A"]),
+            con.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24A"]),
+            con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"]))
 
+candidates1 <- candidates %>% ## New candidate dataset
+  filter(cand_id %in% c(contributions1$cand_id)) %>% ## get the cand_id exists in both candidates and contributions1 
+  select(cand_id:cand_office, cand_ici:cand_status) 
 
-
-#function of sum of amount categorized by (24A/24E + entity type)
-amount_sum <- function(entity_type_arg, trans_type_arg) {
-  contributions1 %>%
-    summarise(te = sum(transaction_amt[transaction_type == trans_type_arg & entity_type == entity_type_arg]))
+#create two lists of pro.type and con.type
+pro.type <- c()
+con.type <- c()
+i=1
+while(i<8) {
+      a <- paste("pro", entity_type_list[i], sep=".")
+      b <- paste("con", entity_type_list[i], sep=".")
+      pro.type <- c(pro.type, a)
+      con.type <- c(con.type, b)
+      i=i+1
 }
 
+election <- full_join(candidates1, contributions1, by = "cand_id") %>% 
+  mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY, 
+          con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY) %>%
+  group_by(cand_party_affiliation) %>%
+  summarise(pro.CAN = sum(pro.CAN), pro.CCM = sum(pro.CCM), pro.COM = sum(pro.COM), 
+            pro.IND = sum(pro.IND), pro.ORG = sum(pro.ORG), pro.PAC = sum(pro.PAC),
+            pro.PTY = sum(pro.PTY), 
+            con.CAN = sum(con.Can), con.CCM = sum(con.CCM), con.COM = sum(con.COM),
+            con.IND = sum(con.IND), con.ORG = sum(con.ORG), con.PAC = sum(con.PAC),
+            con.PTY = sum(con.PTY), pro.sum = sum(pro.sum), con.sum = sum(con.sum)) %>%
+  filter(cand_party_affiliation == "DEM" | cand_party_affiliation == "REP") %>%
+  gather("type", "amount",pro.CAN:con.PTY) %>%
+  mutate(transaction.type = ifelse(type %in% c(pro.type), "pro", "con"),
+         entity.type = ifelse(type %in% "pro.CAN" | type %in% "con.CAN", "CAN", 
+                              ifelse(type %in% "pro.CCM" | type %in% "con.CCM", "CCM", 
+                                     ifelse(type %in% "pro.COM" | type %in% "con.COM", "COM", 
+                                            ifelse(type %in% "pro.IND" | type %in% "con.IND", "IND", 
+                                                   ifelse(type %in% "pro.ORG" | type %in% "con.ORG", "ORG", 
+                                                          ifelse(type %in% "pro.PAC" | type %in% "con.PAC", "PAC",
+                                                                 ifelse(type %in% "pro.PTY" | type %in% "con.PTY", "PTY", type)))))))) %>%
+  select(-type) %>%
+  spread(transaction.type, amount) %>%
+  select(-pro.sum, -con.sum) %>%
+  gather("transaction.type", "amount", con:pro) %>%
+  print()
 ```
+
+
 
 ```{r}
 ## Karina 10.29.17 #1
@@ -63,62 +116,14 @@ con <- contributions %>%
 
 con
 ```
-
-```{r}
-#Shuli rewrite chunk "Karina 10/29/17 #1 #2"
-##con becomes contributions1 without summarize sum
-
-#create list of pro.type and con.type
-pro.type <- c()
-con.type <- c()
-i=1
-while(i<8) {
-      a <- paste("pro", entity_type_list[i], sep=".")
-      b <- paste("con", entity_type_list[i], sep=".")
-      pro.type <- c(pro.type, a)
-      con.type <- c(con.type, b)
-      i=i+1
+#Shuli, this function makes R run very slow
+#function of sum of amount categorized by (24A/24E + entity type)
+amount_sum <- function(entity_type_arg, trans_type_arg) {
+  contributions %>%
+    summarise(te = sum(transaction_amt[entity_type == entity_type_arg & transaction_type == trans_type_arg]))
 }
 
-#wrangling data in contributions
-contributions1 <- contributions %>%
-  filter(transaction_type == "24E" | transaction_type == "24A") %>%
-  filter(entity_type != "") %>%
-  group_by(cand_id) %>%
-  summarise(pro.CAN = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24E"]), 
-            pro.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24E"]),
-            pro.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24E"]),
-            pro.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24E"]),
-            pro.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24E"]),
-            pro.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24E"]),
-            pro.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24E"]),
-            con.Can = sum(transaction_amt[entity_type == "CAN" & transaction_type == "24A"]),
-            con.CCM = sum(transaction_amt[entity_type == "CCM" & transaction_type == "24A"]),
-            con.COM = sum(transaction_amt[entity_type == "COM" & transaction_type == "24A"]),
-            con.IND = sum(transaction_amt[entity_type == "IND" & transaction_type == "24A"]),
-            con.ORG = sum(transaction_amt[entity_type == "ORG" & transaction_type == "24A"]),
-            con.PAC = sum(transaction_amt[entity_type == "PAC" & transaction_type == "24A"]),
-            con.PTY = sum(transaction_amt[entity_type == "PTY" & transaction_type == "24A"])) 
 
-cand <- candidates %>% ## New candidate dataset
-  filter(cand_id %in% c(contributions1$cand_id)) %>% ## get the cand_id exists in both candidates and contributions1 
-  select(cand_id:cand_office, cand_ici:cand_status) 
-
-
-election <- full_join(cand, contributions1, by = "cand_id") %>% 
-  mutate(pro.sum = pro.CAN+pro.CCM+pro.COM+pro.IND+pro.ORG+pro.PAC+pro.PTY, 
-          con.sum = con.Can+con.CCM+con.COM+con.IND+con.ORG+con.PAC+con.PTY) %>%
-  group_by(cand_party_affiliation) %>%
-  summarise(pro.CAN = sum(pro.CAN), pro.CCM = sum(pro.CCM), pro.COM = sum(pro.COM), 
-            pro.IND = sum(pro.IND), pro.ORG = sum(pro.ORG), pro.PAC = sum(pro.PAC),
-            pro.PTY = sum(pro.PTY), 
-            con.CAN = sum(con.Can), con.CCM = sum(con.CCM), con.COM = sum(con.COM),
-            con.IND = sum(con.IND), con.ORG = sum(con.ORG), con.PAC = sum(con.PAC),
-            con.PTY = sum(con.PTY), pro.sum = sum(pro.sum), con.sum = sum(con.sum)) 
-head(cand)
-
-
-```
 
 
 ```{r}
