@@ -110,7 +110,7 @@ ggplot(election, aes(x = entity_type, y = amount/total*100, fill=type, width = 0
 
 The graph below shows the amount of advocating/opposing of contributions classified by entity type. Democrats receive more money in total than Republicans. Organization contributes much more than any other type of committees, so we make a graph for it separately.
 
-```{r, warning=FALSE, message=FALSE, fig.width=10, fig.height=8}
+```{r, warning=FALSE, message=FALSE, fig.width=13, fig.height=10}
 #amount distribution of contributions
 p2 <- ggplot(election_non_org, aes(x = entity_type, y = total/1000000)) + 
   geom_bar(stat = "identity", 
