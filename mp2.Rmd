@@ -5,7 +5,7 @@ date: "October 31, 2017"
 output: html_document
 ---
 
-Different type of entity has different preference of Party. This report breaks down the entity type of committee and seeks to analyze its preference by looking at their contributions. Committee entity type includes: 
+Different type of entity has different preference of Party. **This report breaks down the entity type of committee and seeks to analyze its preference by looking at their contributions.** Committee entity type includes: 
 
 1. CAN: Candidate 
 
@@ -62,20 +62,21 @@ election <- full_join(candidates1, contributions1, by = "cand_id") %>%
   select(-transaction_type) %>%
   na.omit()
 
-election1<- election %>%
+election1<- election %>% 
   group_by(cand_party_affiliation, entity_type) %>%
-  summarise(total=sum(amount))
+  summarise(total=sum(amount)) #summarize total amount received regardless of transaction type
 
-election <- left_join(election, election1)
+election <- left_join(election, election1) #adding total amount to election dataset
 
 election_org <- election1 %>%
-  filter(entity_type == "ORG")
+  filter(entity_type == "ORG") #new dataset for ORG contributions
 
 election_non_org <- election1 %>%
-  filter(entity_type != "ORG")
+  filter(entity_type != "ORG") #dataset for contributors other than ORG
 
+# vector list for labeling canditate party affiliation
 party_name <- c(DEM="Democrats",
-                REP="Republicans")
+                REP="Republicans") 
 ```
 
 The graph below shows the percentage advocating/opposing distribution of contributions to candidates categorized by different entity type. It shows that Republicans receive more opposing contributions than Democrats. Moreover, some committees obviously prefer one party over the other. For example, Committee, Individual, Political Action Committee prefer Democrats. Party Organizations contribute mainly to advocate instead of opposing. 
