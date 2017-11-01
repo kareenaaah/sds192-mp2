@@ -79,11 +79,16 @@ party_name <- c(DEM="Democrats",
                 REP="Republicans") 
 ```
 
+```{r}
+print(election)
+```
+
+
+
 The graph below shows the percentage advocating/opposing distribution of contributions to candidates categorized by different entity type. It shows that Republicans receive more opposing contributions than Democrats. Moreover, some committees obviously prefer one party over the other. For example, Committee, Individual, Political Action Committee prefer Democrats. Party Organizations contribute mainly to advocate instead of opposing. 
 
 ```{r, warning=FALSE, message=FALSE, fig.width=13, fig.height=6}
-#plot
-#percentage distribution of contributions
+#Plot percentage distribution of contributions. Distinct colors are used for indicating the different transaction types
 ggplot(election, aes(x = entity_type, y = amount/total*100, fill=type, width = 0.7)) + 
   geom_bar(stat = "identity", alpha=0.8) + 
   facet_grid(.~cand_party_affiliation,labeller=as_labeller(party_name)) +
@@ -101,18 +106,17 @@ ggplot(election, aes(x = entity_type, y = amount/total*100, fill=type, width = 0
         legend.title = element_text(face="bold",size=15),
         legend.text = element_text(size=10),
         panel.border=element_blank(), 
-        panel.grid=element_blank(),
-        panel.margin=unit(2,"lines"))+
+        panel.grid=element_blank())+
   scale_fill_discrete(name="Transaction Type",
                     breaks=c("con", "pro"),
-                    labels=c("Opposing election of candidate", "Advocating election of candidate"))
+                    labels=c("Opposing election of candidate", "Advocating election of candidate")) ##Change the legend labels into a more clear desciption
 
 ```
 
 The graph below shows the amount of advocating/opposing of contributions classified by entity type. Democrats receive more money in total than Republicans. Organization contributes much more than any other type of committees, so we make a graph for it separately.
 
 ```{r, warning=FALSE, message=FALSE, fig.width=13, fig.height=10}
-#amount distribution of contributions
+#amount distribution of contributions.Since the amount of ORG is much larger than the other entity types, we separate the ORG amount for a separate graph as p3, the rest of the entity types are plotted into p2
 p2 <- ggplot(election_non_org, aes(x = entity_type, y = total/1000000)) + 
   geom_bar(stat = "identity", 
            alpha = 0.8, fill="#488BC2") + 
@@ -168,5 +172,5 @@ p3 <- ggplot(election_org, aes(x = entity_type, y = total/1000000, width=0.15)) 
         panel.grid.major=element_blank(), 
         panel.grid.minor=element_blank())
  
-grid.arrange(p2,p3)
+grid.arrange(p2,p3) ##Combine p2 and p3
 ```
