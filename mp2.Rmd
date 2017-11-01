@@ -79,12 +79,6 @@ party_name <- c(DEM="Democrats",
                 REP="Republicans") 
 ```
 
-```{r}
-print(election)
-```
-
-
-
 The graph below shows the percentage advocating/opposing distribution of contributions to candidates categorized by different entity type. It shows that Republicans receive more opposing contributions than Democrats. Moreover, some committees obviously prefer one party over the other. For example, Committee, Individual, Political Action Committee prefer Democrats. Party Organizations contribute mainly to advocate instead of opposing. 
 
 ```{r, warning=FALSE, message=FALSE, fig.width=13, fig.height=6}
@@ -116,7 +110,7 @@ ggplot(election, aes(x = entity_type, y = amount/total*100, fill=type, width = 0
 The graph below shows the amount of advocating/opposing of contributions classified by entity type. Democrats receive more money in total than Republicans. Organization contributes much more than any other type of committees, so we make a graph for it separately.
 
 ```{r, warning=FALSE, message=FALSE, fig.width=13, fig.height=10}
-#amount distribution of contributions.Since the amount of ORG is much larger than the other entity types, we separate the ORG amount for a separate graph as p3, the rest of the entity types are plotted into p2
+#Amount distribution of contributions.Since the amount of ORG is much larger than the other entity types, we separate the ORG amount for a separate graph as p3, the rest of the entity types are plotted into p2
 p2 <- ggplot(election_non_org, aes(x = entity_type, y = total/1000000)) + 
   geom_bar(stat = "identity", 
            alpha = 0.8, fill="#488BC2") + 
